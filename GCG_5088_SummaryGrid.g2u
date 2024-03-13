@@ -1,0 +1,898 @@
+Program.Sub.ScreenSU.Start
+Gui.frmSummary..Create
+Gui.frmSummary..Caption("Summary Grid (View only)")
+Gui.frmSummary..Size(14925,9450)
+Gui.frmSummary..MinX(0)
+Gui.frmSummary..MinY(0)
+Gui.frmSummary..Position(0,0)
+Gui.frmSummary..BackColor(-2147483633)
+Gui.frmSummary..MaxButton(False)
+Gui.frmSummary..MousePointer(0)
+Gui.frmSummary..Event(UnLoad,frmSummary_UnLoad)
+Gui.frmSummary.GsGrid.Create(GsGridControl)
+Gui.frmSummary.GsGrid.Size(14370,8100)
+Gui.frmSummary.GsGrid.Position(165,465)
+Gui.frmSummary.cmdLock.Create(Button)
+Gui.frmSummary.cmdLock.Size(1410,375)
+Gui.frmSummary.cmdLock.Position(180,30)
+Gui.frmSummary.cmdLock.Event(Click,cmdLock_Click)
+Gui.frmSummary.cmdLock.Caption("Lock Screen")
+Gui.frmSummary.timer1.Create(Timer)
+Gui.frmSummary.timer1.Size(495,495)
+Gui.frmSummary.timer1.Position(12660,-30)
+Gui.frmSummary.timer1.Interval(1000)
+Gui.frmSummary.timer1.Event(Timer,timer1_Timer)
+Gui.frmSummary.timer1.Enabled(False)
+Gui.frmSummary.cmdReset.Create(Button)
+Gui.frmSummary.cmdReset.Size(690,375)
+Gui.frmSummary.cmdReset.Position(1620,45)
+Gui.frmSummary.cmdReset.Caption("Reset")
+Gui.frmSummary.cmdReset.Event(Click,cmdReset_Click)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Global.sFilname.Declare
+v.Global.sTransType.Declare 
+v.Local.sret.Declare 
+v.Local.iPID.Declare 
+v.Local.bExist.Declare 
+v.Local.ihwd.Declare 
+
+V.Local.iX.Declare 
+V.Local.iY.Declare  
+
+'		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H1","HKey1","Document Alias")
+'		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+'			Variable.Passed.000010.Set(v.Args.RetVal)
+'		f.Intrinsic.Control.endif
+'		f.Intrinsic.Control.End 
+
+'f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H1","HKey1","Instrument Code")
+'		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+'			Variable.Passed.000007.Set(v.Args.RetVal)
+'		f.Intrinsic.Control.endif
+'		f.Intrinsic.Control.End 
+
+''10530 save 'SO 12231
+''10542 post delete ' SO 12242
+''10260 QO populate hook 12010 SO 
+''10660 Exit 12400
+
+
+F.Intrinsic.Control.SelectCase(v.Caller.Hook)
+	F.Intrinsic.Control.Case("32820")
+		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H1","HKey1","Instrument Code")
+		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+			Variable.Passed.000007.Set(v.Args.RetVal)
+		f.Intrinsic.Control.endif
+		f.Intrinsic.Control.End 
+	F.Intrinsic.Control.Case("32821")
+		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H2","HKey1","Source")
+		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+			Variable.Passed.000008.Set(v.Args.RetVal)
+		f.Intrinsic.Control.endif
+		f.Intrinsic.Control.End 
+	F.Intrinsic.Control.Case("32822")
+		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H3","HKey1","DestCountry")
+		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+			Variable.Passed.000009.Set(v.Args.RetVal)
+		f.Intrinsic.Control.endif
+		f.Intrinsic.Control.End 
+	F.Intrinsic.Control.Case("32823")
+		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H4","HKey1","Document Alias")
+		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+			Variable.Passed.000010.Set(v.Args.RetVal)
+		f.Intrinsic.Control.endif
+		f.Intrinsic.Control.End 
+	F.Intrinsic.Control.Case("32824")
+		f.Intrinsic.Control.CallSub(UserFld_Brow,"HKey","H5","HKey1","Frame")
+		f.Intrinsic.Control.If(v.Args.RetVal,<>,"CANCEL")
+			Variable.Passed.000011.Set(v.Args.RetVal)
+		f.Intrinsic.Control.endif
+		f.Intrinsic.Control.End 
+	F.Intrinsic.Control.Case("12242")
+	'DELETE Order Line
+		f.Intrinsic.Control.CallSub(Reorder_Lines,"sMode","SalesOrder")
+		v.Global.sTransType.Set("SO")
+		f.Intrinsic.Control.CallSub(BuildTranFile)
+	F.Intrinsic.Control.Case("10542")
+		'DELETE Quote Line
+		f.Intrinsic.Control.CallSub(Reorder_Lines,"sMode","Quote")
+		v.Global.sTransType.Set("QO")
+		f.Intrinsic.Control.CallSub(BuildTranFile)
+	F.Intrinsic.Control.Case("10532")
+		'post save & delete QO
+		v.Global.sTransType.Set("QO")
+		f.Intrinsic.Control.CallSub(BuildTranFile)
+	F.Intrinsic.Control.Case("12231")
+		'post save & delete
+		v.Global.sTransType.Set("SO")
+		f.Intrinsic.Control.CallSub(BuildTranFile)
+	'QO populate hook
+	F.Intrinsic.Control.Case("10260")
+		'Asynchronous
+		v.Global.sTransType.Set("QO")
+		f.Intrinsic.Control.CallSub(TranCheck_load)
+	'SO populate hook
+	F.Intrinsic.Control.Case("12010")
+	'Asynchronous
+		v.Global.sTransType.Set("SO")
+		f.Intrinsic.Control.CallSub(TranCheck_load)
+	F.Intrinsic.Control.CaseAny("10660","12400")
+	'Asynchronous
+	'Quote Ln & Ord Ln Exit
+		
+		f.Intrinsic.Control.CallSub(TrialAlias)
+		f.Intrinsic.Control.CallSub(term_process,"Type","new")
+		f.Intrinsic.Control.End 
+'	'QO SAVE & DELETE
+'	F.Intrinsic.Control.CaseAny("10530","10542")
+'		v.Global.sTransType.Set("QO")
+'		f.Intrinsic.Control.CallSub(BuildFile)
+'		f.Intrinsic.Control.End 
+'	'SO SAVE & DELETE
+'	F.Intrinsic.Control.CaseAny("12231","12242")
+'		v.Global.sTransType.Set("SO")
+'		f.Intrinsic.Control.CallSub(BuildFile)
+'		f.Intrinsic.Control.End 
+'	f.Intrinsic.Control.CaseElse 
+		f.Intrinsic.Control.ExitSub 
+f.Intrinsic.Control.EndSelect 
+
+
+'f.Intrinsic.UI.Msgbox(v.Caller.hook)
+f.Intrinsic.Control.CallSub(createpidfile)
+'f.Intrinsic.Control.CallSub(term_process,"Type","old")
+
+f.Intrinsic.Control.CallSub(load_grid)
+Gui.frmSummary.timer1.Enabled(true)
+f.Intrinsic.Control.CallSub(getscreenpos,"sRead","Read")
+
+'f.Intrinsic.Control.CallSub(getscreenpos,"sRead","Write")
+
+gui.frmSummary.cmdLock.Anchor(5)
+gui.frmSummary.GsGrid.Anchor(15)
+gui.frmSummary..Show 
+'gui.frmSummary..Visible(true)
+
+'v.Local.ihwd.Set(v.Screen.frmSummary.HWnd)
+'f.Intrinsic.Control.CallSub(getscreenpos,"sRead","Read")
+'F.Intrinsic.API.SetWindowPosition(v.Local.ihwd,V.Args.XPOS,V.Args.YPOS)
+'F.Intrinsic.API.SetWindowPosition(v.Local.ihwd,728,286)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.frmSummary_UnLoad.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.Data.DataTable.Close("DTLines")
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End 
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.frmSummary_UnLoad.End
+
+Program.Sub.Load_Grid.Start
+F.Intrinsic.Control.SetErrorHandler("Load_Grid_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSQL.Declare 
+V.Local.sSQLDICT.Declare 
+v.local.sTranNo.Declare 
+v.local.sTranLn.Declare 
+v.Local.iTotClmn.Declare 
+v.Local.i.Declare 
+v.Local.stitle.Declare 
+
+
+
+'load blan records
+
+f.Intrinsic.Control.If(v.Global.sTransType,=,"SO")
+'	f.Intrinsic.String.Build("select order_no 'OrderNo',Record_no as 'LineNo',Part,Description,Weight,Qty_Ordered as Qty,Price,(price*discount)*qty_ordered as 'Discount',Extension,Line_Type as 'Type',order_no+Record_no as 'ComKey',Description as 'descord' from v_order_lines where Order_No = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	f.Intrinsic.String.Build("select order_no 'OrderNo',Record_no as 'LineNo',Part,Description,Qty_Ordered as Qty,Price,Discount_Price as 'Discounted Price',Extension,Weight,Line_Type as 'Type',order_no+Record_no as 'ComKey',Description as 'descord' from v_order_lines where Order_No = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	V.Local.sSQLDICT.Set("select TXT.Order_Num+Order_Line as SOL,Text from v_order_lines ORD join v_ORDER_LN_TEXT TXT on ORD.Order_No = TXT.Order_Num and ORD.Record_no = TXT.Order_Line and Order_Type = 9999 where PART = 'Comment'")
+f.Intrinsic.Control.ElseIf(v.Global.sTransType,=,"QO")
+'	f.Intrinsic.String.Build("select quote_no 'QuoteNo',Record_no as 'LineNo',Part,Description,Weight,Qty_quoted as Qty,Price,(price*discount)*Qty_quoted as 'Discount',Extension,Line_Type as 'Type',quote_no+Record_no as 'ComKey',Description as 'descord' from v_quote_lines  where quote_no = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	f.Intrinsic.String.Build("select quote_no 'QuoteNo',Record_no as 'LineNo',Part,Description,Qty_quoted as Qty,Price,Discount_Price as 'Discounted Price',Extension,Weight,Line_Type as 'Type',quote_no+Record_no as 'ComKey',Description as 'descord' from v_quote_lines  where quote_no = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	V.Local.sSQLDICT.Set("select TXT.QUOTE_NUMBER+QUOTE_LINE as SOL,Text from v_quote_lines ORD join v_QUOTE_LN_TEXT TXT on ORD.quote_no = TXT.QUOTE_NUMBER and ORD.Record_no = TXT.QUOTE_LINE and QUOTE_TYPE = 9999 where PART = 'Comment'")
+f.Intrinsic.Control.EndIf 
+
+
+
+f.Data.DataTable.Create("DTLines",True)
+f.Intrinsic.Control.If(v.Global.sTransType,=,"SO")
+	f.Data.DataTable.AddColumn("DTLines","OrderNo","string")
+f.Intrinsic.Control.ElseIf(v.Global.sTransType,=,"QO")
+	f.Data.DataTable.AddColumn("DTLines","QuoteNo","string")
+f.Intrinsic.Control.EndIf
+
+f.Data.DataTable.AddColumn("DTLines","LineNo","string")
+f.Data.DataTable.AddColumn("DTLines","Part","string")
+f.Data.DataTable.AddColumn("DTLines","Description","string")
+f.Data.DataTable.AddColumn("DTLines","Qty","long")
+f.Data.DataTable.AddColumn("DTLines","Price","float")
+f.Data.DataTable.AddColumn("DTLines","Discounted Price","float")
+f.Data.DataTable.AddColumn("DTLines","Extension","float")
+f.Data.DataTable.AddColumn("DTLines","Weight","float")
+f.Data.DataTable.AddColumn("DTLines","Type","string")
+f.Data.DataTable.AddColumn("DTLines","ComKey","string")
+f.Data.DataTable.AddColumn("DTLines","descord","string")
+
+'F.Data.DataTable.CreateFromSQL("DTLines","con",v.Local.sSQL,True)
+F.Data.DataView.Create("DTLines","DVLines")
+
+'F.Data.Dictionary.CreateFromSQL("DICLn", "con",V.Local.sSQLDICT)
+'F.Data.Dictionary.SetDefaultReturn("DICLn", "***NORETURN***")
+'F.Data.DataTable.FillFromDictionary("DTLines", "DICLn", "ComKey", "Description")
+'f.Data.Dictionary.Close("DICLn")
+
+'To Avoid Dictionary replace default value
+Function.Data.DataTable.AddExpressionColumn("DTLines","ACTDESC","string","iif(Description='***NORETURN***',descord,Description)")
+
+gui.frmSummary.GsGrid.AddGridViewFromDataView("GridView","DTLines","DVLines")
+gui.frmSummary.GsGrid.SetGridViewProperty("GridView", "ColumnPanelRowHeight", "40")
+
+gui.frmSummary.GsGrid.GetColumnCount("GridView",v.Local.iTotClmn)
+f.Intrinsic.Math.Sub(v.Local.iTotClmn,1,v.Local.iTotClmn)
+f.Intrinsic.Control.For(v.Local.i,0,v.Local.iTotClmn,1)
+	gui.frmSummary.GsGrid.GetColumnNamebyIndex("GridView",v.Local.i,v.Local.stitle)
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"AllowEdit",False)
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"ReadOnly",True)
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"HeaderFontBold","True")
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"HeaderBackColor","#7FFF00")
+'	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"HeaderHAlignment","Center")
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView",v.Local.stitle,"HeaderWordWrap","wrap")
+f.Intrinsic.Control.Next(v.Local.i)
+
+'	gui.frmSummary.GsGrid.SetGridViewProperty("GridView", "ColumnPanelRowHeight", "40")
+	Gui.frmSummary.GsGrid.SetGridviewProperty("GridView","OptionsViewRowAutoHeight","True")
+
+'	gui.frmSummary.GsGrid.SetColumnProperty("GridView","Part","MinWidth",120)
+'	gui.frmSummary.GsGrid.SetColumnProperty("GridView","ACTDESC","MinWidth",200)
+
+	Gui.frmSummary.GsGrid.AddSummaryItem("GridView","WEIGHT","WEIGHT","Sum","","","n")
+	Gui.frmSummary.GsGrid.AddSummaryItem("GridView","Extension","Extension","Sum","","","n")
+'	Gui.frmSummary.GsGrid.AddSummaryItem("GridView","Discount","Discount","Sum","","","n")
+
+
+'	Gui.frmSummary.GsGrid.SetColumnProperty("GridView","Discount","DisplayCustomNumeric","#,##0.00")
+	Gui.frmSummary.GsGrid.SetColumnProperty("GridView","Extension","DisplayCustomNumeric","#,##0.00")
+	Gui.frmSummary.GsGrid.SetColumnProperty("GridView","Price","DisplayCustomNumeric","#,##0.00")
+
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView", "ACTDESC", "CellWordWrap", "Wrap")
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView", "Description", "Visible", False)
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView", "descord", "Visible", False)
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView", "ComKey", "Visible", False)
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView","ACTDESC","VisibleIndex",3)
+
+	gui.frmSummary.GsGrid.SetColumnProperty("GridView","ACTDESC","Caption","Description")
+
+
+	f.Intrinsic.Control.CallSub(RefreshDT)
+
+	gui.frmSummary.GsGrid.MainView("GridView")
+
+	
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Load_Grid_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Load_Grid.End
+
+Program.Sub.GetStatus.Start
+F.Intrinsic.Control.SetErrorHandler("GetStatus_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sGet.Declare(String)
+
+Function.Intrinsic.Task.GetProcessList(V.Local.sGet)
+'
+'F.Intrinsic.Debug.InvokeDebugger
+'
+'F.Intrinsic.Debug.Stop
+'Function.Data.DataTable.CreateFromString("DT",V.Local.sGet,"Process ID*!*Process name*!*Process executable*!*Consumed Memory" ,"string*!*string*!*string*!*string" ,"!*!","*!*")
+
+' PID, program name, program FQN, memory usage (in KB), thread count, process start time, process start date. 
+
+'Function.Intrinsic.Task.GetTaskList(V.Local.sGet)
+'Function.Data.DataTable.CreateFromString("DT",V.Local.sGet,"Process ID*!*Process name*!*Process executable*!*Consumed Memory*!*threadcount*!*processstarttime*!*processstartdate" ,"string*!*string*!*string*!*string*!*string*!*string*!*string" ,"!*!","*!*")
+
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GetStatus_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GetStatus.End
+
+Program.Sub.CreatePIDFile.Start
+F.Intrinsic.Control.SetErrorHandler("CreatePIDFile_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+v.Local.sFilname.Declare 
+v.Local.sFolder.Declare 
+v.Local.sRet.Declare 
+v.local.bRet.Declare 
+V.Local.iX.Declare
+v.Local.iY.Declare 
+v.Local.ihwd.Declare 
+
+
+	F.Intrinsic.String.Build("{0}\GCG_5088",V.Caller.FilesDir,V.Local.sFolder)
+	f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,False)
+		f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	f.Intrinsic.Control.EndIf 
+
+	f.Intrinsic.String.Build("{0}\{1}.new",V.Local.sFolder,v.Caller.Terminal,v.local.sFilname)
+	f.Intrinsic.String.Build("{0}",v.Ambient.PID,v.local.sRet)
+	F.Intrinsic.File.String2File(V.local.sFilname,v.local.sRet)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("CreatePIDFile_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.CreatePIDFile.End
+
+Program.Sub.Term_Process.Start
+F.Intrinsic.Control.SetErrorHandler("Term_Process_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sFilname.Declare 
+V.Local.iFile.Declare 
+V.Local.sText.Declare 
+v.Local.bExist.Declare 
+v.local.sRet.Declare 
+v.local.bRet.Declare 
+V.Local.iX.Declare 
+V.Local.iY.Declare 
+v.Local.ihwd.Declare
+
+'Release Lock
+
+F.Intrinsic.String.Build("{0}\GCG_5088\{1}.{2}",V.Caller.FilesDir,v.Caller.Terminal,v.Args.Type,V.Local.sFilname)
+Function.Intrinsic.File.Exists(V.Local.sFilname,v.local.bRet)
+f.Intrinsic.Control.If(v.local.bRet,=,True)
+	F.Intrinsic.File.GetHandle(V.Local.iFile)
+	F.Intrinsic.File.OpenForRead(V.Local.sFilname,V.Local.iFile)
+	F.Intrinsic.File.ReadFile(V.Local.iFile,V.Local.sText)
+	f.Intrinsic.File.CloseFile(V.Local.iFile)
+	f.Intrinsic.String.Split(V.Local.sText,"*!*",V.Local.sText)
+	f.Intrinsic.Task.PIDRunning(V.Local.sText(0),v.Local.bExist)
+	f.Intrinsic.Control.If(v.Local.bExist,=,true)
+
+''		v.Local.ihwd.Set(V.Screen.frmSummary.HWnd)
+'		Function.Intrinsic.API.GetHandleFromPID(V.Local.sText(0),v.Local.ihwd)
+'		F.Intrinsic.API.GetWindowPosition(v.Local.ihwd,V.Local.iX,V.Local.iY)
+'		
+'		Function.Intrinsic.API.GetHandleFromPID(v.Ambient.PID,v.Local.ihwd)
+'		F.Intrinsic.API.GetWindowPosition(v.Local.ihwd,V.Local.iX,V.Local.iY)
+
+		Function.Intrinsic.Task.TerminatePID(V.Local.sText(0))
+	f.Intrinsic.Control.EndIf 
+f.Intrinsic.Control.EndIf 
+
+f.Intrinsic.String.Build("{0}",v.Ambient.PID,v.local.sRet)
+F.Intrinsic.File.String2File(V.local.sFilname,v.local.sRet)
+'f.Intrinsic.Variable.AddRV("XPOS",V.Local.iX,"YPOS",V.Local.iY)
+'f.Intrinsic.Variable.AddRV("XPOS",V.Local.sText(1),"YPOS",V.Local.sText(2))
+'
+'gui.frmSummary..CurrentX(V.Local.sText(1))
+'gui.frmSummary..Currenty(V.Local.sText(2))
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Term_Process_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Term_Process.End
+
+Program.Sub.cmd1_Click.Start
+V.Local.iX.Declare
+V.Local.iY.Declare
+V.Local.iH.Declare
+V.Local.sS.Declare
+V.Local.iH.Set(V.Screen.frmSummary.HWnd)
+
+
+F.Intrinsic.API.GetWindowPosition(V.Local.iH,V.Local.iX,V.Local.iY)
+F.Intrinsic.String.Build("X:{0} Y:{1}",V.Local.iX,V.Local.iY,V.Local.sS)
+'F.Intrinsic.UI.Msgbox(V.Local.sS)
+
+'Gui.frmSummary..Size(13725,9840)
+'Gui.frmSummary.GsGrid.Size(13245,8100)
+Program.Sub.cmd1_Click.End
+
+Program.Sub.GetScreenPOS.Start
+F.Intrinsic.Control.SetErrorHandler("GetScreenPOS_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+v.Local.sFilname.Declare 
+v.Local.sFolder.Declare 
+v.Local.sRet.Declare 
+v.local.bRet.Declare 
+V.Local.iX.Declare
+v.Local.iY.Declare 
+v.Local.ihwd.Declare 
+V.Local.iFile.Declare 
+V.Local.sText.Declare 
+V.Local.iHeight.Declare
+v.Local.iWidth.Declare 
+
+	'Create temp file to verify the caller while printing
+	F.Intrinsic.String.Build("{0}\GCG_5088",V.Caller.FilesDir,V.Local.sFolder)
+	f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,False)
+		f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	f.Intrinsic.Control.EndIf 
+	
+	v.Local.ihwd.Set(V.Screen.frmSummary.HWnd)
+	f.Intrinsic.String.Build("{0}\{1}POS.new",V.Local.sFolder,v.Caller.Terminal,v.local.sFilname)
+	f.Intrinsic.Control.If(v.Args.sRead,=,"Read")
+		Function.Intrinsic.File.Exists(V.Local.sFilname,v.local.bRet)
+		f.Intrinsic.Control.If(v.local.bRet,=,True)
+			F.Intrinsic.File.GetHandle(V.Local.iFile)
+			F.Intrinsic.File.OpenForRead(V.Local.sFilname,V.Local.iFile)
+			F.Intrinsic.File.ReadFile(V.Local.iFile,V.Local.sText)
+			f.Intrinsic.File.CloseFile(V.Local.iFile)
+			f.Intrinsic.String.Split(V.Local.sText,"*!*",V.Local.sText)
+			F.Intrinsic.API.SetWindowPosition(v.Local.ihwd,V.Local.sText(0),V.Local.sText(1))
+			f.Intrinsic.Control.If(V.Local.sText(2),<>,"OOB")
+				Gui.frmSummary..size(V.Local.sText(2),V.Local.sText(3))
+				Gui.frmSummary.GsGrid.size(V.Local.sText(4),V.Local.sText(5))
+			f.Intrinsic.Control.endif
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.Else 
+		F.Intrinsic.API.GetWindowPosition(v.Local.ihwd,V.Local.iX,V.Local.iY)
+		V.Local.iWidth.Set(v.Screen.frmSummary.width)
+		V.Local.iHeight.Set(v.Screen.frmSummary.Height)
+
+		f.Intrinsic.String.Build("{0}*!*{1}*!*{2}*!*{3}*!*{4}*!*{5}",V.Local.iX,V.Local.iY,V.Local.iWidth,V.Local.iHeight,v.Screen.frmSummary!GsGrid.width,v.Screen.frmSummary!GsGrid.Height,v.local.sRet)
+		F.Intrinsic.File.String2File(V.local.sFilname,v.local.sRet)
+	f.Intrinsic.Control.EndIf
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GetScreenPOS_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GetScreenPOS.End
+
+Program.Sub.cmdLock_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+f.Intrinsic.Control.CallSub(getscreenpos,"sRead","Write")
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_5088_SummaryGrid.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdLock_Click.End
+
+Program.Sub.timer1_Timer.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'	f.Intrinsic.UI.Msgbox("")
+	f.Intrinsic.Control.CallSub(TranCheck)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.timer1_Timer.End
+
+Program.Sub.TranCheck.Start
+'F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+'F.Intrinsic.Control.ClearErrors
+
+'V.Local.sError.Declare(String)
+v.local.bRet.Declare
+V.Local.iFile.Declare
+V.Local.sText.Declare
+
+
+Gui.frmSummary.timer1.Enabled(false)
+
+Function.Intrinsic.File.Exists(V.Global.sFilname,v.local.bRet)
+f.Intrinsic.Control.If(v.local.bRet,=,True)
+	Function.Intrinsic.File.IsFileLocked(V.Global.sFilname,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,False)
+		F.Intrinsic.File.GetHandle(V.Local.iFile)
+		F.Intrinsic.File.OpenForRead(V.Global.sFilname,V.Local.iFile)
+		F.Intrinsic.File.ReadFile(V.Local.iFile,V.Local.sText)
+		f.Intrinsic.File.CloseFile(V.Local.iFile)
+		f.Intrinsic.String.Split(V.Local.sText,"*!*",V.Local.sText)
+		f.Intrinsic.Control.CallSub(RefreshDT,"TYPE",V.Local.sText(0),"TranNo",V.Local.sText(1))
+		f.Intrinsic.File.DeleteFile(V.Global.sFilname)
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.EndIf
+
+Gui.frmSummary.timer1.Enabled(true)
+		
+'F.Intrinsic.Control.ExitSub
+
+'F.Intrinsic.Control.Label("Sub_Err")
+'F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+'	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+'	F.Intrinsic.UI.Msgbox(V.Local.sError)
+'Function.Intrinsic.Control.EndIf
+Program.Sub.TranCheck.End
+
+Program.Sub.TranCheck_load.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sFolder.Declare
+v.local.bRet.Declare
+
+	F.Intrinsic.String.Build("{0}\Custom",V.Caller.GlobalDir,V.Local.sFolder)
+	f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,False)
+		f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	f.Intrinsic.Control.EndIf 
+	
+	F.Intrinsic.String.Build("{0}\GCG_5088",V.Local.sFolder,V.Local.sFolder)
+	f.Intrinsic.File.DirExists(V.Local.sFolder,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,False)
+		f.Intrinsic.File.CreateDir(V.Local.sFolder)
+	f.Intrinsic.Control.EndIf 
+	
+	F.Intrinsic.String.Build("{0}\{1}.trn",V.Local.sFolder,V.Caller.terminal,V.Global.sFilname)
+	Function.Intrinsic.File.Exists(V.Global.sFilname,v.local.bRet)
+	f.Intrinsic.Control.If(v.local.bRet,=,True)
+		f.Intrinsic.File.DeleteFile(V.Global.sFilname)
+	f.Intrinsic.Control.EndIf
+	
+	F.ODBC.Connection!con.OpenCompanyConnection(300)
+	
+'	Gui.frmSummary.timer1.Enabled(true)
+
+	
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.TranCheck_load.End
+
+Program.Sub.RefreshDT.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSQL.Declare
+V.Local.sSQLDICT.Declare
+v.local.sTranNo.Declare
+
+f.Intrinsic.String.LPad(v.Passed.000060,"0",7,v.local.sTranNo)
+
+f.Data.DataTable.DeleteRow("DTLines")
+Function.Data.DataTable.AcceptChanges("DTLines")
+
+'f.Intrinsic.Control.If(v.Global.sTransType,=,"SO")
+'	f.Intrinsic.String.Build("select order_no 'OrderNo',Record_no as 'LineNo',Part,Description,Qty_Ordered as Qty,Price,Discount_Price as 'Discounted Price',Extension,Weight,Line_Type as 'Type',order_no+Record_no as 'ComKey',Description as 'descord' from v_order_lines where Order_No = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+'	V.Local.sSQLDICT.Set("select TXT.Order_Num+Order_Line as SOL,Text from v_order_lines ORD join v_ORDER_LN_TEXT TXT on ORD.Order_No = TXT.Order_Num and ORD.Record_no = TXT.Order_Line and Order_Type = 9999 where PART = 'Comment'")
+'f.Intrinsic.Control.ElseIf(v.Global.sTransType,=,"QO")
+'	f.Intrinsic.String.Build("select quote_no 'QuoteNo',Record_no as 'LineNo',Part,Description,Qty_quoted as Qty,Price,Discount_Price as 'Discounted Price',Extension,Weight,Line_Type as 'Type',quote_no+Record_no as 'ComKey',Description as 'descord' from v_quote_lines  where quote_no = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+'	V.Local.sSQLDICT.Set("select TXT.QUOTE_NUMBER+QUOTE_LINE as SOL,Text from v_quote_lines ORD join v_QUOTE_LN_TEXT TXT on ORD.quote_no = TXT.QUOTE_NUMBER and ORD.Record_no = TXT.QUOTE_LINE and QUOTE_TYPE = 9999 where PART = 'Comment'")
+'f.Intrinsic.Control.EndIf 
+
+'f.Intrinsic.Control.If(v.Global.sTransType,=,"SO")
+'	f.Intrinsic.String.Build("select order_no 'OrderNo',Record_no as 'LineNo',ORD.Part,ORD.Description,Qty_Ordered as Qty,Price,Discount_Price as 'Discounted Price',Extension,Inv.lbs as 'Weight',Line_Type as 'Type',order_no+Record_no as 'ComKey',ORD.Description as 'descord' from v_order_lines ORD join INVENTORY_MST2 Inv on ORD.part = Inv.part and  ORD.location = Inv.location where Order_No = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+'	V.Local.sSQLDICT.Set("select TXT.Order_Num+Order_Line as SOL,Text from v_order_lines ORD join v_ORDER_LN_TEXT TXT on ORD.Order_No = TXT.Order_Num and ORD.Record_no = TXT.Order_Line and Order_Type = 9999 where PART = 'Comment'")
+'f.Intrinsic.Control.ElseIf(v.Global.sTransType,=,"QO")
+'	f.Intrinsic.String.Build("select quote_no 'QuoteNo',Record_no as 'LineNo',ORD.Part,ORD.Description,Qty_quoted as Qty,Price,Discount_Price as 'Discounted Price',Extension,Inv.lbs as 'Weight',Line_Type as 'Type',quote_no+Record_no as 'ComKey',ORD.Description as 'descord' from v_quote_lines ORD join INVENTORY_MST2 Inv on ORD.part = Inv.part and  ORD.location = Inv.location where quote_no = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+'	V.Local.sSQLDICT.Set("select TXT.QUOTE_NUMBER+QUOTE_LINE as SOL,Text from v_quote_lines ORD join v_QUOTE_LN_TEXT TXT on ORD.quote_no = TXT.QUOTE_NUMBER and ORD.Record_no = TXT.QUOTE_LINE and QUOTE_TYPE = 9999 where PART = 'Comment'")
+'f.Intrinsic.Control.EndIf 
+
+f.Intrinsic.Control.If(v.Global.sTransType,=,"SO")
+	f.Intrinsic.String.Build("select order_no 'OrderNo',Record_no as 'LineNo',ORD.Part,ORD.Description,Qty_Ordered as Qty,Price,Discount_Price as 'Discounted Price',Extension,Inv.lbs * qty_ordered as 'Weight',Line_Type as 'Type',order_no+Record_no as 'ComKey',ORD.Description as 'descord' from v_order_lines ORD join INVENTORY_MST2 Inv on ORD.part = Inv.part and  ORD.location = Inv.location where Order_No = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	V.Local.sSQLDICT.Set("select TXT.Order_Num+Order_Line as SOL,Text from v_order_lines ORD join v_ORDER_LN_TEXT TXT on ORD.Order_No = TXT.Order_Num and ORD.Record_no = TXT.Order_Line and Order_Type = 9999 where PART = 'Comment'")
+f.Intrinsic.Control.ElseIf(v.Global.sTransType,=,"QO")
+	f.Intrinsic.String.Build("select quote_no 'QuoteNo',Record_no as 'LineNo',ORD.Part,ORD.Description,Qty_quoted as Qty,Price,Discount_Price as 'Discounted Price',Extension,Inv.lbs * qty_quoted as 'Weight',Line_Type as 'Type',quote_no+Record_no as 'ComKey',Description as 'descord' from v_quote_lines ORD join INVENTORY_MST2 Inv on ORD.part = Inv.part and  ORD.location = Inv.location where quote_no = '{0}' order by Record_no",V.Local.sTranNo,V.Local.sSQL)
+	V.Local.sSQLDICT.Set("select TXT.QUOTE_NUMBER+QUOTE_LINE as SOL,Text from v_quote_lines ORD join v_QUOTE_LN_TEXT TXT on ORD.quote_no = TXT.QUOTE_NUMBER and ORD.Record_no = TXT.QUOTE_LINE and QUOTE_TYPE = 9999 where PART = 'Comment'")
+f.Intrinsic.Control.EndIf 
+
+F.Data.DataTable.CreateFromSQL("DTTemp", "con",V.Local.sSQL)
+
+
+F.Data.DataTable.Merge("DTTemp","DTLines",False,2)
+
+F.Data.Dictionary.CreateFromSQL("DICLn", "con",V.Local.sSQLDICT)
+F.Data.Dictionary.SetDefaultReturn("DICLn", "***NORETURN***")
+F.Data.DataTable.FillFromDictionary("DTLines", "DICLn", "ComKey", "Description")
+f.Data.Dictionary.Close("DICLn")
+
+
+f.Data.DataTable.Close("DTTemp")
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.RefreshDT.End
+
+Program.Sub.BuildFile.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.local.sRet.Declare
+V.local.sFilname.Declare
+v.local.sTranNo.Declare
+
+f.Intrinsic.String.LPad(v.Passed.000060,"0",7,v.local.sTranNo)
+
+F.Intrinsic.String.Build("{0}\Custom\GCG_5088\{1}.trn",V.Caller.Global,V.Caller.terminal,V.local.sFilname)
+
+f.Intrinsic.String.Build("{0}*!*{1}",v.Global.sTransType,v.local.sTranNo,v.local.sRet)
+F.Intrinsic.File.String2File(V.local.sFilname,v.local.sRet)
+
+f.Intrinsic.Control.End
+	
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.BuildFile.End
+
+Program.Sub.BuildTranFile.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+v.local.sRet.Declare
+V.local.sFilname.Declare
+v.local.sTranNo.Declare
+v.Local.sTransType.Declare
+
+		
+f.Intrinsic.String.LPad(v.Passed.000060,"0",7,v.local.sTranNo)
+
+F.Intrinsic.String.Build("{0}\Custom\GCG_5088\{1}.trn",V.Caller.GlobalDir,V.Caller.terminal,V.local.sFilname)
+
+f.Intrinsic.String.Build("{0}*!*{1}",v.Global.sTransType,v.local.sTranNo,v.local.sRet)
+F.Intrinsic.File.String2File(V.local.sFilname,v.local.sRet)
+f.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.BuildTranFile.End
+
+Program.Sub.Reorder_Lines.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sMode.Declare(String)
+V.Local.sOrderNum.Declare(String)
+V.Local.sReturnData.Declare(String)
+V.Local.iStatus.Declare(Long,0)
+V.Local.iBusinessMessageNumber.Declare(Long,0)
+V.Local.sMessage.Declare(String)
+V.Local.sLno.Declare
+
+
+'Use Callwrapper
+F.Intrinsic.Control.If(V.Args.sMode,=,"Quote")
+	F.Global.Callwrapper.New(V.Args.sMode,"Sales.MoveQuoteLine")
+F.Intrinsic.Control.ElseIf(V.Args.sMode,=,"SalesOrder")
+	F.Global.Callwrapper.New(V.Args.sMode,"Sales.MoveSalesOrderLine")
+F.Intrinsic.Control.EndIf
+
+f.Intrinsic.String.LPad(Variable.Passed.000060,"0",7,V.Local.sOrderNum)
+
+F.Global.Callwrapper.SetProperty(V.Args.sMode,"OrderNumber",V.Local.sOrderNum)
+F.Global.Callwrapper.SetProperty(V.Args.sMode,"OrderLine","0000")
+F.Global.Callwrapper.SetProperty(V.Args.sMode,"NewOrderLine","0000")
+F.Global.Callwrapper.Run(V.Args.sMode)
+F.Global.CallWrapper.GetProperty(V.Args.sMode,"Status",V.Local.iStatus)
+F.Global.CallWrapper.GetProperty(V.Args.sMode,"BusinessMessageNumber",V.Local.iBusinessMessageNumber)
+
+F.Intrinsic.Control.If(V.Args.sMode,<>,"Quote")
+	V.Local.sLno.Set(Variable.Passed.000051.Long)
+	f.Intrinsic.Math.Add(V.Local.sLno.Long,-1,V.Local.sLno)
+	f.Intrinsic.String.LPad(V.Local.sLno,"0",3,V.Local.sLno)
+	f.Intrinsic.String.Build("**DELETE**{0}",V.Local.sLno,V.Local.sLno)
+	V.Passed.GAB-TEXT-3.Set(V.Local.sLno)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Reorder_Lines.End
+
+Program.Sub.cmdReset_Click.Start
+Gui.frmSummary..Size(14880,9780)
+Gui.frmSummary.GsGrid.Size(14190,8100)
+
+Program.Sub.cmdReset_Click.End
+
+Program.Sub.TrialAlias.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSQL.Declare(String)
+v.local.sTranNo.Declare
+V.Local.sMessage.Declare
+V.Local.sRet.Declare
+
+
+F.ODBC.Connection!con.OpenCompanyConnection(300)
+f.Intrinsic.String.LPad(v.Passed.000060,"0",7,v.local.sTranNo)
+
+f.Intrinsic.String.Build("select top 1 HDR.User_4 from v_order_HEADER HDR join V_ORDER_LINES DET on HDR.ORDER_NO = DET.ORDER_NO WHERE HDR.ORDER_NO = '{0}' and ucase(HDR.User_4) IN ('TRADE SHOW','SALES DEMO','60 DAY FREE TRIAL','30 DAY FREE TRIAL','LOANER') and Det.RECORD_TYPE = 'L' and Det.Flag_BOM <> 'Y' and Det.LINE_TYPE <> 'C'",v.local.sTranNo,V.Local.sSQL)
+F.Data.DataTable.CreateFromSQL("DTTemp", "con",V.Local.sSQL)
+f.Intrinsic.Control.If(v.DataTable.DTTemp.RowCount,>,0)
+	F.Intrinsic.String.Build("Do you want to change all lines for this order {0} to be Consignment Lines?.",V.Ambient.NewLine,V.Local.sMessage)
+	F.Intrinsic.UI.Msgbox(V.Local.sMessage,"Order Entry",4,V.Local.sRet)
+	F.Intrinsic.Control.If(V.Local.sRet,=,6)
+	'They answered yes so they are really sure they want to do this
+		F.Intrinsic.String.Build("update ORDER_LINES set LINE_TYPE = 'C' where RECORD_TYPE = 'L' and Flag_BOM <> 'Y' AND ORDER_NO = '{0}'",V.Local.sTranNo,V.Local.sSQL)
+		F.ODBC.Connection!con.Execute(V.Local.sSQL)
+		F.Intrinsic.UI.Msgbox("Update Complete","Order Entry")
+	F.Intrinsic.Control.EndIf
+f.Intrinsic.Control.EndIf
+
+f.Data.DataTable.Close("DTTemp")
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.TrialAlias.End
+
+Program.Sub.UserFld_Brow.Start
+F.Intrinsic.Control.SetErrorHandler("Sub_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSQL.Declare(String)
+V.Local.sKey.Declare(String)
+V.Local.sRet.Declare
+V.Local.sTitle.declare
+V.Local.sWidth.Declare
+
+'UserFied Custom Browser
+F.ODBC.Connection!con.OpenCompanyConnection(300)
+V.Local.sSQL.Set("SELECT OE_USER_VALUES.KEY_VALUE AS  'Instrument Code',  OE_USER_VALUES.CUST AS 'Customer', IF(OE_USER_VALUES.CUST <= '', 'All Customers', CUSTOMER_MASTER.NAME_CUSTOMER) AS 'Customer Name',") 
+f.Intrinsic.String.Build(" {0} IF (OE_USER_VALUES.SHIPTO = '*', 'All', OE_USER_VALUES.SHIPTO) AS 'Ship To', OE_USER_VALUES.DEF_YN AS 'Default' FROM OE_USER_VALUES LEFT OUTER JOIN CUSTOMER_MASTER ON OE_USER_VALUES.CUST = CUSTOMER_MASTER.CUSTOMER AND ",v.Local.sSQL,v.Local.sSQL)
+f.Intrinsic.String.Build(" {0} CUSTOMER_MASTER.REC = '1' WHERE OE_USER_VALUES.HDR_KEY ='{1}' AND (OE_USER_VALUES.SHIPTO like'%' OR OE_USER_VALUES.SHIPTO <= '' OR OE_USER_VALUES.SHIPTO = 'ALL(*)') ORDER BY 'Customer', 'Customer Name', 'Ship To', 1",v.Local.sSQL,V.args.HKey,v.Local.sSQL)
+
+F.Intrinsic.String.Build("{0}*!*Customer*!*Customer Name*!*Ship To*!*Default",V.Args.HKey1,V.Local.sTitle)
+V.Local.sWidth.Set("150*!*80*!*80*!*150*!*80")
+
+F.Intrinsic.String.Split(V.Local.sTitle,"*!*",V.Local.sTitle)
+F.Intrinsic.String.Split(V.Local.sWidth,"*!*",V.Local.sWidth)
+F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+F.Intrinsic.UI.Browser("Invoices","Con",V.Local.sSQL,V.Local.sTitle,V.Local.sWidth,V.Local.sRet)
+
+'F.Intrinsic.UI.Browser("Invoices","Con",V.Local.sSQL,V.Local.sRet,"80",V.Local.sRet)
+
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+	F.Intrinsic.Variable.AddRV("RetVal",V.Local.sRet(0).Trim)
+f.Intrinsic.Control.Else
+	F.Intrinsic.Variable.AddRV("RetVal","CANCEL")
+F.Intrinsic.Control.EndIf
+Variable.Passed.777777.Set(1)
+F.ODBC.Connection!con.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Sub_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: Project",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.UserFld_Brow.End
+
+Program.Sub.Comments.Start
+${$0$}$Summary Grid for SO and QO$}$MLA$}$6/11/2018 9:57:43 AM$}$False
+Program.Sub.Comments.End
